@@ -41,8 +41,8 @@ int main()
     //Part A
     int* coursesPerStudent = NULL;
     int numberOfStudents = 0;
-    countStudentsAndCourses("/Users/orenhayoun/Desktop/שנה א׳/סמסטר ב׳/תכנות מתקדמים c/מטלות/מטלה 4/studentList.txt", &coursesPerStudent, &numberOfStudents);
-    char*** students = makeStudentArrayFromFile("/Users/orenhayoun/Desktop/שנה א׳/סמסטר ב׳/תכנות מתקדמים c/מטלות/מטלה 4/studentList.txt", &coursesPerStudent, &numberOfStudents);
+    countStudentsAndCourses("//Users//orenhayoun//Desktop//שנה א׳//סמסטר ב׳//תכנות מתקדמים c//מטלות//מטלה 4//studentList.txt", &coursesPerStudent, &numberOfStudents);
+    char*** students = makeStudentArrayFromFile("//Users//orenhayoun//Desktop//שנה א׳//סמסטר ב׳//תכנות מתקדמים c//מטלות//מטלה 4//studentList.txt", &coursesPerStudent, &numberOfStudents);
     factorGivenCourse(students, coursesPerStudent, numberOfStudents, "Linear Algebra", +5);
 //    printStudentArray(students, coursesPerStudent, numberOfStudents);
     studentsToFile(students, coursesPerStudent, numberOfStudents); //this frees all memory. Part B fails if this line runs. uncomment for testing (and comment out Part B)
@@ -60,6 +60,7 @@ int main()
 
     return 0;
 }
+
 void countStudentsAndCourses(const char* fileName, int** coursesPerStudent, int* numberOfStudents)
 {
     FILE *studentList;
@@ -68,18 +69,25 @@ void countStudentsAndCourses(const char* fileName, int** coursesPerStudent, int*
         printf("Unable to open file\n");exit(1);
     }
     char oneline[MAXLINE];
-    int i = 0;
+    int size = 0;
     while(fgets(oneline,MAXLINE, studentList)!=NULL){
-        *(coursesPerStudent + i) = (int*) calloc(1,sizeof(int));
-        if(*(coursesPerStudent + i) == NULL){
-            printf("allocation falid...");
-            exit(1);
-        }
-        *((*coursesPerStudent) + i) = countPipes(oneline,MAXLINE);
-        i++;
+        size++;
+    }
+    *coursesPerStudent = (int*) calloc(size,sizeof(int));
+    if(*coursesPerStudent == NULL)
+    {
+        printf("allocation falid...");
+        exit(1);
+    }
+    *numberOfStudents = size;
+    rewind(studentList);
+    size = 0;
+    while(fgets(oneline,MAXLINE, studentList)!=NULL)
+    {
+        (*coursesPerStudent)[size] = countPipes(oneline,MAXLINE);
+        size++;
     }
     fclose(studentList);
-    *numberOfStudents = i;
     return;
 }
 
@@ -97,13 +105,66 @@ int countPipes(const char* lineBuffer, int maxCount)
     }
     return counter;
 }
+
+char*** makeStudentArrayFromFile(const char* fileName, int** coursesPerStudent, int* numberOfStudents)
+{
+    char ***students = (char***) calloc(*numberOfStudents,sizeof(char**));
+    if(students == NULL){
+        printf("allocation faild...\n");
+        exit(1);
+    }
+    FILE *studentList;
+    studentList = fopen(fileName,"r");
+    if(studentList == NULL){
+        printf("Unable to open file\n");exit(1);
+    }
+    char *token = NULL;
+    char oneline[MAXLINE];
+    int row=0,inrow=0;
+
+    while(fgets(oneline,MAXLINE,studentList) != NULL)
+    {
+        inrow = 0;
+        *(students+row) = (char**) calloc((*coursesPerStudent)[row] * 2 + 1,sizeof(char*));
+        if(*(students+row) == NULL){
+            printf("allocation faild...\n");
+            exit(1);
+        }
+        token = strtok(oneline,"|");
+        while(token != NULL)
+        {
+            students[row][inrow] = (char*) malloc(sizeof(char));
+            if(students[row][inrow] == NULL)
+            {
+                printf("allocation faild...\n");
+                exit(1);
+            }
+            strcpy(students[row][inrow], token);
+            if(inrow == (*coursesPerStudent)[row] * 2)
+            {
+                strcpy(students[row][inrow], token);
+                break;
+            }
+            if(inrow % 2 != 0)
+            {
+                token = strtok(NULL,"|");
+            }
+            else token = strtok(NULL,",");
+            inrow++;
+        }
+        row++;
+    }
+    fclose(studentList);
+    return students;
+}
+
 void factorGivenCourse(char** const* students, const int* coursesPerStudent, int numberOfStudents, const char* courseName, int factor)
 {
     int row = 0,inrow=1,val = 0,i=0;
     if(factor > 20 || factor < -20) return;
     while(*(students+row) != NULL)
     {
-        i=0;
+        i=1;
         inrow = 1;
         while(i < coursesPerStudent[row])
         {
@@ -210,10 +271,10 @@ void studentsToFile(char*** students, int* coursesPerStudent, int numberOfStuden
     fclose(studentListnew);
     // free all
     row=0;
-    while(students[row] != NULL)
+    while(row < numberOfStudents)
     {
         inrow=0;
-        while(students[row][inrow] != NULL)
+        while(inrow < coursesPerStudent[row] * 2 + 1)
         {
             free(students[row][inrow]);
             inrow++;
@@ -239,50 +300,3 @@ void writeToBinFile(const char* fileName, Student* students, int numberOfStudent
 //{
 //    //add code here
 //}
-   
-char*** makeStudentArrayFromFile(const char* fileName, int** coursesPerStudent, int* numberOfStudents)
-{
-    char ***students = (char***) calloc(*numberOfStudents,sizeof(char**));
-    if(students == NULL){
-        printf("allocation faild...\n");
-        exit(1);
-    }
-    FILE *studentList;
-    studentList = fopen(fileName,"r");
-    if(studentList == NULL){
-        printf("Unable to open file\n");exit(1);
-    }
-    char *token = NULL;
-    char oneline[MAXLINE];
-    int row=0,inrow=0;
-
-    while(fgets(oneline,MAXLINE,studentList) != NULL)
-    {
-        inrow = 0;
-        *(students+row) = (char**) calloc((*(*coursesPerStudent) + row)* 2 + 1,sizeof(char*));
-        if(*(students+row) == NULL){
-            printf("allocation faild...\n");
-            exit(1);
-        }
-        token = strtok(oneline,"|");
-        while(token != NULL)
-        {
-            students[row][inrow] = (char*) calloc(1,sizeof(char));
-            if(students[row][inrow] == NULL)
-            {
-                printf("allocation faild...\n");
-                exit(1);
-            }
-            strcpy(students[row][inrow], token);
-            if(inrow % 2 != 0)
-            {
-                token = strtok(NULL,"|");
-            }
-            else token = strtok(NULL,",");
-            inrow++;
-        }
-        row++;
-    }
-    fclose(studentList);
-    return students;
-}
