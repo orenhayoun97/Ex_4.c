@@ -6,6 +6,7 @@
 #include <string.h>
 
 #define MAXLINE 1023
+#define NAME_SIZE 35
 
 typedef struct StudentCourseGrade
 {
@@ -28,8 +29,10 @@ char*** makeStudentArrayFromFile(const char* fileName, int** coursesPerStudent, 
 void printStudentArray(const char* const* const* students, const int* coursesPerStudent, int numberOfStudents);
 void factorGivenCourse(char** const* students, const int* coursesPerStudent, int numberOfStudents, const char* courseName, int factor);
 void studentsToFile(char*** students, int* coursesPerStudent, int numberOfStudents);
+// functions not apart from the exeisce
 void itoa(int n, char s[]);
 void reverse(char s[]);
+void freestudetns(char*** students, int* coursesPerStudent, int numberOfStudents);
 
 //Part B
 Student* transformStudentArray(char*** students, const int* coursesPerStudent, int numberOfStudents);
@@ -45,15 +48,19 @@ int main()
     char*** students = makeStudentArrayFromFile("//Users//orenhayoun//Desktop//שנה א׳//סמסטר ב׳//תכנות מתקדמים c//מטלות//מטלה 4//studentList.txt", &coursesPerStudent, &numberOfStudents);
     factorGivenCourse(students, coursesPerStudent, numberOfStudents, "Linear Algebra", +5);
 //    printStudentArray(students, coursesPerStudent, numberOfStudents);
-    studentsToFile(students, coursesPerStudent, numberOfStudents); //this frees all memory. Part B fails if this line runs. uncomment for testing (and comment out Part B)
+//    studentsToFile(students, coursesPerStudent, numberOfStudents); //this frees all memory. Part B fails if this line runs. uncomment for testing (and comment out Part B)
     
     //Part B
-//    Student* transformedStudents,,,, = transformStudentArray(students, coursesPerStudent, numberOfStudents);
-//    writeToBinFile("students.bin", transformedStudents, numberOfStudents);
-//    Student* testReadStudents = readFromBinFile("students.bin");
-
+    Student* transformedStudents = transformStudentArray(students, coursesPerStudent, numberOfStudents);
+    writeToBinFile("/Users/orenhayoun/Desktop/שנה א׳/סמסטר ב׳/תכנות מתקדמים c/מטלות/מטלה 4/students.bin", transformedStudents, numberOfStudents);
+    Student* testReadStudents = readFromBinFile("/Users/orenhayoun/Desktop/שנה א׳/סמסטר ב׳/תכנות מתקדמים c/מטלות/מטלה 4/students.bin");
     //add code to free all arrays of struct Student
-
+    free(transformedStudents->grades);
+    free(transformedStudents);
+    // function that free the studetns
+    freestudetns(students, coursesPerStudent, numberOfStudents);
+    
+    
 
     /*_CrtDumpMemoryLeaks();*/ //uncomment this block to check for heap memory allocation leaks.
     // Read https://docs.microsoft.com/en-us/visualstudio/debugger/finding-memory-leaks-using-the-crt-library?view=vs-2019
@@ -71,7 +78,7 @@ void countStudentsAndCourses(const char* fileName, int** coursesPerStudent, int*
     }
     char oneline[MAXLINE];
     int size = 0;
-    while(fgets(oneline,MAXLINE, studentList)!=NULL){
+    while(fgets(oneline,MAXLINE, studentList)!=NULL){ // run until the end of file
         size++;
     }
     *coursesPerStudent = (int*) calloc(size,sizeof(int));
@@ -131,7 +138,7 @@ char*** makeStudentArrayFromFile(const char* fileName, int** coursesPerStudent, 
             printf("allocation faild...\n");
             exit(1);
         }
-        token = strtok(oneline,"|");
+        token = strtok(oneline,"|"); // jump in line until '|' sign
         while(token != NULL)
         {
             students[row][inrow] = (char*) malloc(sizeof(char));
@@ -146,7 +153,7 @@ char*** makeStudentArrayFromFile(const char* fileName, int** coursesPerStudent, 
                 strcpy(students[row][inrow], token);
                 break;
             }
-            if(inrow % 2 != 0)
+            if(inrow % 2 != 0) // once we callect the name of couce , the another we collect the score of the course
             {
                 token = strtok(NULL,"|");
             }
@@ -162,9 +169,10 @@ char*** makeStudentArrayFromFile(const char* fileName, int** coursesPerStudent, 
 void factorGivenCourse(char** const* students, const int* coursesPerStudent, int numberOfStudents, const char* courseName, int factor)
 {
     int row = 0,inrow=1,val = 0,i=0;
-    if(factor > 20 || factor < -20) return;
+    if(factor > 20 || factor < -20) return; // if incorrect factor
     while(*(students+row) != NULL)
     {
+        // start with one because we dont want to count the name
         i=1;
         inrow = 1;
         while(i < coursesPerStudent[row])
@@ -173,6 +181,7 @@ void factorGivenCourse(char** const* students, const int* coursesPerStudent, int
             {
                 val = atoi(students[row][inrow+1]);
                 val = val + factor;
+                // if the val is under 0 or upper 100, we fix it
                 if(val >= 100 || val <= 0)
                 {
                     if(val >= 100) val = 100;
@@ -209,7 +218,7 @@ void itoa(int n, char s[])
      int i, j;
      char c;
 
-     for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
+     for (i = 0, j = (unsigned)strlen(s)-1; i<j; i++, j--) {
          c = s[i];
          s[i] = s[j];
          s[j] = c;
@@ -247,7 +256,7 @@ void studentsToFile(char*** students, int* coursesPerStudent, int numberOfStuden
             strcpy(oneline,students[row][inrow]);
             if(inrow == (coursesPerStudent[row] * 2) )
             {
-                token = strtok(oneline,"\r\n");
+                token = strtok(oneline,"\r\n"); // in macbook new line is \r\n
                 fputs(token,studentListnew);
                 fputc('\n', studentListnew);
                 break;
@@ -270,8 +279,12 @@ void studentsToFile(char*** students, int* coursesPerStudent, int numberOfStuden
     }
     fflush(studentListnew);
     fclose(studentListnew);
-    // free all
-    row=0;
+    // free all arrays
+    freestudetns(students, coursesPerStudent, numberOfStudents);
+}
+void freestudetns(char*** students, int* coursesPerStudent, int numberOfStudents)
+{
+    int row = 0,inrow = 0;
     while(row < numberOfStudents)
     {
         inrow=0;
@@ -284,20 +297,113 @@ void studentsToFile(char*** students, int* coursesPerStudent, int numberOfStuden
         row++;
     }
     free(students);
-    return;
 }
 
 void writeToBinFile(const char* fileName, Student* students, int numberOfStudents)
 {
-    //add code here
+    FILE* binfile;
+    binfile = fopen(fileName,"wb");
+    if(!binfile)
+    {
+        printf("Unable to open file!");
+        exit(0);
+    }
+    int i = 0,j=0; // index
+    StudentCourseGrade *temp = NULL; // pointer to struct StudentCourseGrade
+    int num = numberOfStudents;
+    // fwrite(adress to put the "thing"(string,int,float...) in the file,number of bytes,amount of this,FILE) -
+    fwrite(&num,1,sizeof(int), binfile); // the number of students
+    while(i < numberOfStudents)
+    {
+        num = students[i].numberOfCourses;
+        fwrite(students[i].name,NAME_SIZE,1, binfile); // the name of the student
+        fwrite(&num,sizeof(int),1, binfile); // number of courses
+        while(j < students[i].numberOfCourses)
+        {
+            temp = students[i].grades;
+            fwrite(temp->courseName,NAME_SIZE,1, binfile);
+            fwrite(&temp->grade,sizeof(int),1, binfile);
+            temp++;
+            j++;
+        }
+        i++;
+    }
+    fflush(binfile);
+    fclose(binfile);
 }
 
-//Student* readFromBinFile(const char* fileName)
-//{
-//    //add code here
-//}
-//
-//Student* transformStudentArray(char*** students, const int* coursesPerStudent, int numberOfStudents)
-//{
-//    //add code here
-//}
+Student* readFromBinFile(const char* fileName)
+{
+    FILE* binfile;
+    binfile = fopen(fileName,"rb");
+    if(!binfile)
+    {
+        printf("Unable to open file!");
+        exit(0);
+    }
+    int i = 0,j=0;
+    int nos = 0; // number of students
+    int cps = 0; // coures per student
+    StudentCourseGrade *temp = NULL; // pointer to struct StudentCourseGrade
+    fread(&nos, sizeof(int), 1, binfile);
+    Student* studlist = (Student*) malloc(nos*sizeof(Student));
+    if(studlist == NULL)
+    {
+        printf("readFromBinFile,studlist : allocation faild...\n");exit(1);
+    }
+    while(i < nos)
+    {
+        fread(studlist[i].name,NAME_SIZE, 1, binfile);
+        fread(&cps, sizeof(int), 1, binfile);
+        temp = studlist[i].grades;
+        studlist[i].numberOfCourses = cps;
+        temp = (StudentCourseGrade*) malloc(cps*sizeof(StudentCourseGrade));
+        if(temp == NULL)
+        {
+            printf("readFromBinFile,tudlist[i].grades : allocation faild...\n");exit(1);
+        }
+        j = 0;
+        while(j < cps)
+        {
+            fread(temp->courseName, NAME_SIZE, 1, binfile);
+            fread(&temp->grade, NAME_SIZE, 1, binfile);
+            temp++;
+            j++;
+        }
+        i++;
+    }
+    fclose(binfile);
+    return studlist;
+}
+
+Student* transformStudentArray(char*** students, const int* coursesPerStudent, int numberOfStudents)
+{
+    Student* studlist = (Student*) malloc(numberOfStudents*sizeof(Student));
+    if(studlist == NULL)
+    {
+        printf("transformStudentArray,studlist : allocation faild...\n");exit(1);
+    }
+    StudentCourseGrade* temp = NULL;
+    int i = 0,j=0;
+    while(i < numberOfStudents)
+    {
+        strcpy((studlist)[i].name,*students[i]);
+        studlist[i].numberOfCourses = coursesPerStudent[i];
+        studlist[i].grades = (StudentCourseGrade*) malloc(coursesPerStudent[i]*sizeof(StudentCourseGrade));
+        if(studlist[i].grades == NULL)
+        {
+            printf("transformStudentArray,studlist[i].grades : allocation faild...\n");exit(1);
+        }
+        temp = studlist[i].grades;
+        j = 0;
+        while(j < coursesPerStudent[i])
+        {
+            strcpy(temp->courseName,(*students)[j*2+1]);
+            temp->grade = atoi((*students)[j*2+2]);
+            temp++;
+            j++;
+        }
+        i++;
+    }
+    return studlist;
+}
