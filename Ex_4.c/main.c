@@ -95,7 +95,10 @@ void countStudentsAndCourses(const char* fileName, int** coursesPerStudent, int*
         (*coursesPerStudent)[size] = countPipes(oneline,MAXLINE);
         size++;
     }
-    fclose(studentList);
+    if(fclose(studentList) != 0)
+    {
+        printf("Close File Fail...\n");exit(1);
+    }
     return;
 }
 
@@ -162,7 +165,10 @@ char*** makeStudentArrayFromFile(const char* fileName, int** coursesPerStudent, 
         }
         row++;
     }
-    fclose(studentList);
+    if(fclose(studentList)!= 0)
+    {
+        printf("Close File Fail...\n");exit(1);
+    }
     return students;
 }
 
@@ -278,7 +284,10 @@ void studentsToFile(char*** students, int* coursesPerStudent, int numberOfStuden
         row++;
     }
     fflush(studentListnew);
-    fclose(studentListnew);
+    if(fclose(studentListnew)!= 0)
+    {
+        printf("Close File Fail...\n");exit(1);
+    }
     // free all arrays in the main
 }
 void freestudetns(char*** students, int* coursesPerStudent, int numberOfStudents)
@@ -328,7 +337,10 @@ void writeToBinFile(const char* fileName, Student* students, int numberOfStudent
         i++;
     }
     fflush(binfile);
-    fclose(binfile);
+    if(fclose(binfile)!=0)
+    {
+        printf("Close File Fail...\n");exit(1);
+    }
 }
 
 Student* readFromBinFile(const char* fileName)
@@ -371,7 +383,10 @@ Student* readFromBinFile(const char* fileName)
         }
         i++;
     }
-    fclose(binfile);
+    if(fclose(binfile)!= 0)
+    {
+        printf("Close File Fail...\n");exit(1);
+    }
     return studlist;
 }
 
