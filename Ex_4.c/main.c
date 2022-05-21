@@ -48,15 +48,15 @@ int main()
     char*** students = makeStudentArrayFromFile("//Users//orenhayoun//Desktop//שנה א׳//סמסטר ב׳//תכנות מתקדמים c//מטלות//מטלה 4//studentList.txt", &coursesPerStudent, &numberOfStudents);
     factorGivenCourse(students, coursesPerStudent, numberOfStudents, "Linear Algebra", +5);
 //    printStudentArray(students, coursesPerStudent, numberOfStudents);
-//    studentsToFile(students, coursesPerStudent, numberOfStudents); //this frees all memory. Part B fails if this line runs. uncomment for testing (and comment out Part B)
+    studentsToFile(students, coursesPerStudent, numberOfStudents); //this frees all memory. Part B fails if this line runs. uncomment for testing (and comment out Part B)
     
     //Part B
-    Student* transformedStudents = transformStudentArray(students, coursesPerStudent, numberOfStudents);
-    writeToBinFile("/Users/orenhayoun/Desktop/שנה א׳/סמסטר ב׳/תכנות מתקדמים c/מטלות/מטלה 4/students.bin", transformedStudents, numberOfStudents);
-    Student* testReadStudents = readFromBinFile("/Users/orenhayoun/Desktop/שנה א׳/סמסטר ב׳/תכנות מתקדמים c/מטלות/מטלה 4/students.bin");
-    //add code to free all arrays of struct Student
-    free(transformedStudents->grades);
-    free(transformedStudents);
+//    Student* transformedStudents = transformStudentArray(students, coursesPerStudent, numberOfStudents);
+//    writeToBinFile("/Users/orenhayoun/Desktop/שנה א׳/סמסטר ב׳/תכנות מתקדמים c/מטלות/מטלה 4/students.bin", transformedStudents, numberOfStudents);
+//    Student* testReadStudents = readFromBinFile("/Users/orenhayoun/Desktop/שנה א׳/סמסטר ב׳/תכנות מתקדמים c/מטלות/מטלה 4/students.bin");
+//    //add code to free all arrays of struct Student
+//    free(transformedStudents->grades);
+//    free(transformedStudents);
     // function that free the studetns
     freestudetns(students, coursesPerStudent, numberOfStudents);
     
@@ -141,7 +141,7 @@ char*** makeStudentArrayFromFile(const char* fileName, int** coursesPerStudent, 
         token = strtok(oneline,"|"); // jump in line until '|' sign
         while(token != NULL)
         {
-            students[row][inrow] = (char*) malloc(sizeof(char));
+            students[row][inrow] = (char*) malloc(strlen(token)*sizeof(char) + 1);
             if(students[row][inrow] == NULL)
             {
                 printf("allocation faild...\n");
@@ -279,8 +279,7 @@ void studentsToFile(char*** students, int* coursesPerStudent, int numberOfStuden
     }
     fflush(studentListnew);
     fclose(studentListnew);
-    // free all arrays
-    freestudetns(students, coursesPerStudent, numberOfStudents);
+    // free all arrays in the main
 }
 void freestudetns(char*** students, int* coursesPerStudent, int numberOfStudents)
 {
