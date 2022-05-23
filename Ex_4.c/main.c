@@ -338,13 +338,13 @@ void writeToBinFile(const char* fileName, Student* students, int numberOfStudent
     fwrite(&num,sizeof(int),1, binfile); // the number of students
     while(i < numberOfStudents)
     {
+        temp = students[i].grades;
         num = students[i].numberOfCourses;
         strcpy(str, students[i].name);
         fwrite(str,NAME_SIZE,1, binfile); // the name of the student
         fwrite(&num,sizeof(int),1, binfile); // number of courses
         while(j < students[i].numberOfCourses)
         {
-            temp = students[i].grades;
             fwrite(temp->courseName,NAME_SIZE,1, binfile);
             fwrite(&(temp->grade),sizeof(int),1, binfile);
             temp++;
