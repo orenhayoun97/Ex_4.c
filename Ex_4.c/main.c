@@ -343,14 +343,7 @@ void writeToBinFile(const char* fileName, Student* students, int numberOfStudent
         strcpy(str, students[i].name);
         fwrite(str,NAME_SIZE,1, binfile); // the name of the student
         fwrite(&num,sizeof(int),1, binfile); // number of courses
-        while(j < students[i].numberOfCourses)
-        {
-            fwrite(temp->courseName,NAME_SIZE,1, binfile);
-            fwrite(&(temp->grade),sizeof(int),1, binfile);
-            temp++;
-            j++;
-        }
-        j=0;
+        fwrite(temp,NAME_SIZE+sizeof(int),students[i].numberOfCourses, binfile);
         i++;
     }
     fflush(binfile);
@@ -391,17 +384,8 @@ Student* readFromBinFile(const char* fileName)
         {
             printf("readFromBinFile,tudlist[i].grades : allocation faild...\n");exit(1);
         }
-        j = 0;
         temp = studlist[i].grades;
-        while(j < cps)
-        {
-            fread(str, NAME_SIZE, 1, binfile);
-            strcpy(temp->courseName, str);
-//            fread(temp->courseName, NAME_SIZE, 1, binfile);
-            fread(&(temp->grade), NAME_SIZE, 1, binfile);
-            temp++;
-            j++;
-        }
+        fread(temp, NAME_SIZE+sizeof(int),cps , binfile);
         i++;
     }
     if(fclose(binfile)!= 0)
